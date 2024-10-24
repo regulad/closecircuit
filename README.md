@@ -12,7 +12,7 @@
 
 Close as in close-by, not close as in shut down. 
 
-This project lets you create a PAN surveillance system using WiFi and IP Webcams. The monitor functions as an AP using the Wi-Fi Direct APIs, and can have multiple Wi-Fi cameras connected to it. 
+This project lets you create a PAN surveillance system using WiFi and IP Webcams. The monitor functions as an AP using the Wi-Fi Direct APIs, and can have multiple Wi-Fi cameras connected to it, all completely airgapped, offline, and secure.
 
 The monitor runs the CC app (contained in the `app` directory), and the cameras may be either traditional IP cameras or Android devices running the [Android IP Webcam](https://play.google.com/store/apps/details?id=com.pas.webcam&hl=en_US) app.
 
