@@ -19,7 +19,7 @@ When the monitor detects that any IP webcams with an HTTP server at port 8080 an
 * WiFi support
 * Android 5.0 or later (use Android 10.0 or later if you would like the network SSID/password to stay the same between reboots, versions >=5.0 and <10.0 will generate a new SSID/password each time the monitor is started)
 * Some cameras (android cameras, etc.)
- 
+
 ## Applications
 
 * Camps in the wilderness

@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "xyz.regulad.closecircuit"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -68,7 +68,6 @@ dependencies {
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
-    implementation(libs.commons.net)
     implementation(libs.androidx.security.crypto)
     implementation(libs.accompanist.permissions)
 

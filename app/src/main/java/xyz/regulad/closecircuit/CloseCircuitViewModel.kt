@@ -10,7 +10,8 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.*
 import xyz.regulad.regulib.wifi.SubnetScanner
-import xyz.regulad.regulib.wifi.WifiP2pManagerView
+import xyz.regulad.regulib.wifi.WifiP2pManagerView.Companion.WIFI_P2P_SUBNET
+import xyz.regulad.regulib.wifi.WifiP2pManagerView.Companion.WIFI_P2P_SUBNET_INFO
 import xyz.regulad.regulib.wifi.WifiP2pManagerView.Companion.getWifiP2pManagerView
 
 
@@ -27,23 +28,30 @@ class CloseCircuitViewModel(application: Application) : AndroidViewModel(applica
     }
 
     protected fun finalize() {
-        close()
+        close() // hail mary
     }
 
     private fun close() {
+        if (wifiP2pManagerView.thisGroupInfo.value != null) {
+            runBlocking {
+                wifiP2pManagerView.removeGroup()
+            }
+        }
+
         backgroundJobCoroutineScope.cancel()
-        wifiP2pSubnetScanner.stopScanning()
+        wifiP2pManagerView.teardown()
+        wifiP2pManagerView.teardown()
+        networkSubnetScanner.stopScanning()
     }
 
     override fun onCleared() {
         super.onCleared()
-        wifiP2pManagerView.teardown()
         close()
     }
 
     private val backgroundJobCoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
-    val wifiP2pSubnetScanner = SubnetScanner(WifiP2pManagerView.WIFI_P2P_SUBNET_INFO, ANDROID_IP_WEBCAM_SCANNER)
+    val networkSubnetScanner = SubnetScanner.fromCidr(WIFI_P2P_SUBNET, ANDROID_IP_WEBCAM_SCANNER)
 
     init {
         backgroundJobCoroutineScope.launch {
@@ -57,10 +65,10 @@ class CloseCircuitViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
-    @SuppressLint("MissingPermission")
-    suspend fun setupGroup() {
-        if (wifiP2pManagerView.thisGroupInfo.value != null) {
-            throw IllegalStateException("Group already exists")
+    @SuppressLint("MissingPermission", "InlinedApi", "ObsoleteSdkInt")
+    suspend fun setupAp() {
+        if (wifiP2pManagerView.requestGroupInfo() != null) {
+            wifiP2pManagerView.removeGroup()
         }
 
         if (Build.VERSION.SDK_INT < VERSION_CODES.Q || preferencesRepository.closeCircuitSsid == null || preferencesRepository.closeCircuitPassphrase == null) {
@@ -74,15 +82,7 @@ class CloseCircuitViewModel(application: Application) : AndroidViewModel(applica
                 }.build()
             )
         }
-    }
 
-    fun trySetupGroup() {
-        backgroundJobCoroutineScope.launch {
-            try {
-                setupGroup()
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to setup group", e)
-            }
-        }
+        Log.d(TAG, "P2p legacy group created successfully!")
     }
 }

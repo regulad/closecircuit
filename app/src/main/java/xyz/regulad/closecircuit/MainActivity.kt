@@ -1,37 +1,37 @@
 package xyz.regulad.closecircuit
 
-import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-import android.os.Build
+import android.hardware.Sensor.TYPE_ACCELEROMETER
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import xyz.regulad.closecircuit.CloseCircuitViewModel.Companion.ANDROID_IP_WEBCAM_DEFAULT_PORT
 import xyz.regulad.closecircuit.ui.theme.CloseCircuitTheme
-import xyz.regulad.regulib.FlowCache.Companion.TAG
-import xyz.regulad.regulib.compose.ImmersiveFullscreenContent
-import xyz.regulad.regulib.compose.KeepScreenOn
-import xyz.regulad.regulib.compose.WithDesiredOrientation
+import xyz.regulad.regulib.compose.*
 import xyz.regulad.regulib.compose.components.ByteQRCode
+import xyz.regulad.regulib.compose.components.DynamicColumnRowGridLayout
+import xyz.regulad.regulib.compose.components.MjpegView
 import xyz.regulad.regulib.showToast
 import xyz.regulad.regulib.wifi.RUNTIME_REQUIRED_WIFI_PERMISSIONS
+import kotlin.time.Duration.Companion.seconds
 
 class MainActivity : ComponentActivity() {
     private val closeCircuitViewModel: CloseCircuitViewModel by viewModels()
@@ -45,18 +45,16 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     KeepScreenOn()
                     WithDesiredOrientation(SCREEN_ORIENTATION_SENSOR_LANDSCAPE)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        ImmersiveFullscreenContent()
-                    }
+                    ImmersiveFullscreenContent()
 
                     val thisGroupInfo by closeCircuitViewModel.wifiP2pManagerView.thisGroupInfo.collectAsState()
-                    val connectableClients by closeCircuitViewModel.wifiP2pSubnetScanner.reachableAddresses.collectAsState()
+                    val connectableClients by closeCircuitViewModel.networkSubnetScanner.reachableAddresses.collectAsState()
 
                     val context = LocalContext.current
 
                     val permissionState =
                         rememberMultiplePermissionsState(
-                            permissions = RUNTIME_REQUIRED_WIFI_PERMISSIONS.toList(),
+                            permissions = (RUNTIME_REQUIRED_WIFI_PERMISSIONS).toList(),
                             onPermissionsResult = { permissions ->
                                 if (!permissions.all { it.value }) {
                                     context.showToast("Permissions are required to continue")
@@ -64,35 +62,58 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
-                    LaunchedEffect(permissionState.allPermissionsGranted, thisGroupInfo) {
-                        if (permissionState.allPermissionsGranted && thisGroupInfo == null) {
-                            closeCircuitViewModel.trySetupGroup()
+                    LaunchedEffect(permissionState.allPermissionsGranted) {
+                        if (permissionState.allPermissionsGranted) {
+                            withContext(Dispatchers.Main) {
+                                closeCircuitViewModel.setupAp()
+                            }
                         } else {
                             permissionState.launchMultiplePermissionRequest()
                         }
                     }
 
+                    // Z positive linear acceleration: the phone (car) is moving forward
+
+                    val sensorEvent by rememberSensorState(TYPE_ACCELEROMETER) // i would use TYPE_LINEAR_ACCELERATION but it's not available on all devices
+                    val backingUp by remember {
+                        derivedStateOf {
+                            (sensorEvent?.values?.get(2) ?: 0F) < -3F // TODO: MAGIC NUMBER ALERT (make configurable)
+                        }
+                    }
+
+                    var taps by remember { mutableStateOf(0) }
+                    val timeSinceLastBackedUp by rememberDurationSinceComposition(backingUp, taps)
+                    val deviceActive = backingUp || timeSinceLastBackedUp == null || timeSinceLastBackedUp!! < 60.seconds // don't derive this
+
+                    WithBrightness(if (deviceActive) 1.0F else 0.1F)
+
                     Box(
                         Modifier
-                            .padding(innerPadding)
                             .fillMaxSize()
                     ) {
                         if (connectableClients.isNotEmpty()) {
-                            Row(
+                            DynamicColumnRowGridLayout(
                                 modifier = Modifier.fillMaxSize(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                connectableClients.forEach { client ->
-                                    LaunchedEffect(client) {
-                                        Log.d(TAG, "Connecting to $client")
+                                items = connectableClients.toList(),
+                            ) { client, modifier ->
+                                Box(
+                                    modifier = modifier.background(Color.DarkGray)
+                                ) {
+                                    if (deviceActive) {
+                                        MjpegView(
+                                            url = "http://${client.hostAddress!!}:${ANDROID_IP_WEBCAM_DEFAULT_PORT.toInt()}/video",
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    } else {
+                                        Surface(onClick = { taps++ }, modifier = Modifier.fillMaxSize()) {
+                                            Box(modifier = Modifier.fillMaxSize()) {
+                                                Text(
+                                                    text = "Sleeping (tap or move to wake)",
+                                                    modifier = Modifier.align(Alignment.Center)
+                                                )
+                                            }
+                                        }
                                     }
-
-                                    MjpegView(
-                                        url = "http://${client.hostAddress!!}:${ANDROID_IP_WEBCAM_DEFAULT_PORT.toInt()}/video",
-                                        modifier = Modifier
-                                            .padding(8.dp)
-                                            .fillMaxSize(1F / connectableClients.size)
-                                    )
                                 }
                             }
                         } else if (thisGroupInfo != null) {
