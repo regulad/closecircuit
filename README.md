@@ -1,5 +1,7 @@
 ## Close Circuit (Weekend Project #3)
 
+Upcycle your old phones into something that makes getting out of your driveway *considerably* safer & easier.
+
 <p style="float: left;">
     <img src="./pictures/IMG_2854.jpg" width="500" style="float: left; margin-right: 10px;">
     <img src="./pictures/IMG_2853.jpg" width="500" style="float: left; margin-right: 10px;">
