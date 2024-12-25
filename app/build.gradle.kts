@@ -13,7 +13,7 @@ android {
         minSdk = 23
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -74,4 +74,6 @@ dependencies {
     implementation(libs.regulib.common)
     implementation(libs.regulib.compose)
     implementation(libs.regulib.wifi)
+
+    implementation(libs.dom4j)
 }
