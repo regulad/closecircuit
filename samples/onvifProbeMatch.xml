@@ -1,0 +1,30 @@
+<SOAP-ENV:Envelope
+        xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope"
+        xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing"
+        xmlns:wsdd="http://schemas.xmlsoap.org/ws/2005/04/discovery"
+        xmlns:dn="http://www.onvif.org/ver10/network/wsdl">
+    <SOAP-ENV:Header>
+        <wsa:MessageID>urn:uuid:b808d3f8-7a4b-4761-a6e2-74be25651060</wsa:MessageID>
+        <wsa:RelatesTo>urn:uuid:9c7d332f-4701-4bba-9af2-f5850f61a27e</wsa:RelatesTo>
+        <wsa:To SOAP-ENV:mustUnderstand="true">http://www.w3.org/2005/08/addressing/anonymous</wsa:To>
+        <wsa:Action SOAP-ENV:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2005/04/discovery/ProbeMatches
+        </wsa:Action>
+        <wsdd:AppSequence InstanceId="0" MessageNumber="1"></wsdd:AppSequence>
+    </SOAP-ENV:Header>
+    <SOAP-ENV:Body>
+        <wsdd:ProbeMatches>
+            <wsdd:ProbeMatch>
+                <wsa:EndpointReference>
+                    <wsa:Address>urn:uuid:97EAD713-33A1-463F-999F-16BEDE4F0A6E</wsa:Address>
+                </wsa:EndpointReference>
+                <wsdd:Types>dn:NetworkVideoTransmitter</wsdd:Types>
+                <wsdd:Scopes>onvif://www.onvif.org/name/IP_Webcam onvif://www.onvif.org/type/video_encoder
+                    onvif://www.onvif.org/type/audio_encoder onvif://www.onvif.org/hardware/BUILD_891
+                    onvif://www.onvif.org/location/global
+                </wsdd:Scopes>
+                <wsdd:XAddrs>http://192.168.49.163:8080/onvif/device_service</wsdd:XAddrs>
+                <wsdd:MetadataVersion>1</wsdd:MetadataVersion>
+            </wsdd:ProbeMatch>
+        </wsdd:ProbeMatches>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

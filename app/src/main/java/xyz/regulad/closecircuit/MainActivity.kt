@@ -23,7 +23,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import xyz.regulad.closecircuit.CloseCircuitViewModel.Companion.ANDROID_IP_WEBCAM_DEFAULT_PORT
 import xyz.regulad.closecircuit.ui.theme.CloseCircuitTheme
 import xyz.regulad.regulib.compose.*
 import xyz.regulad.regulib.compose.components.ByteQRCode
@@ -47,8 +46,10 @@ class MainActivity : ComponentActivity() {
                     WithDesiredOrientation(SCREEN_ORIENTATION_SENSOR_LANDSCAPE)
                     ImmersiveFullscreenContent()
 
-                    val thisGroupInfo by closeCircuitViewModel.wifiP2pManagerView.thisGroupInfo.collectAsState()
-                    val connectableClients by closeCircuitViewModel.networkSubnetScanner.reachableAddresses.collectAsState()
+                    val thisGroupInfo by closeCircuitViewModel.groupInfoState.collectAsState()
+                    val wifiEnabled by closeCircuitViewModel.wifiState.collectAsState()
+
+                    val connectableClients by closeCircuitViewModel.accessibleMjpegStreams.collectAsState()
 
                     val context = LocalContext.current
 
@@ -83,7 +84,8 @@ class MainActivity : ComponentActivity() {
 
                     var taps by remember { mutableStateOf(0) }
                     val timeSinceLastBackedUp by rememberDurationSinceComposition(backingUp, taps)
-                    val deviceActive = backingUp || timeSinceLastBackedUp == null || timeSinceLastBackedUp!! < 60.seconds // don't derive this
+                    val deviceActive =
+                        backingUp || timeSinceLastBackedUp == null || timeSinceLastBackedUp!! < 60.seconds // don't derive this
 
                     WithBrightness(if (deviceActive) 1.0F else 0.1F)
 
@@ -101,7 +103,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     if (deviceActive) {
                                         MjpegView(
-                                            url = "http://${client.hostAddress!!}:${ANDROID_IP_WEBCAM_DEFAULT_PORT.toInt()}/video",
+                                            url = client,
                                             modifier = Modifier.fillMaxSize()
                                         )
                                     } else {
@@ -118,6 +120,13 @@ class MainActivity : ComponentActivity() {
                             }
                         } else if (thisGroupInfo != null) {
                             WifiNetworkScreen(thisGroupInfo!!.networkName, thisGroupInfo!!.passphrase)
+                        } else if (!wifiEnabled) {
+                            Text(
+                                text = "WiFi is not enabled; enable to continue",
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .align(Alignment.Center)
+                            )
                         } else {
                             CircularProgressIndicator(
                                 modifier = Modifier
