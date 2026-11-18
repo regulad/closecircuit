@@ -1,5 +1,6 @@
 package xyz.regulad.closecircuit
 
+import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
 import android.hardware.Sensor.TYPE_ACCELEROMETER
 import android.os.Bundle
@@ -35,6 +36,9 @@ import kotlin.time.Duration.Companion.seconds
 class MainActivity : ComponentActivity() {
     private val closeCircuitViewModel: CloseCircuitViewModel by viewModels()
 
+    // The content is immersive and fullscreen, so it ignores the Scaffold's
+    // inset padding on purpose.
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
