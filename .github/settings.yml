@@ -1,4 +1,14 @@
+# Repository configuration, managed by the Settings app
+# (https://github.com/repository-settings/app). The shared defaults come from
+# regulad/.github; this file sets only what is this repository's own.
+_extends: .github
+
 repository:
   name: closecircuit
-  description: "🚗📷📱 Open source software & hardware for a backup camera/baby monitor/whatever offline CCTV system."
+  description: >-
+    🚗📷📱 Open source software & hardware for a backup camera/baby monitor/whatever offline CCTV system.
+  homepage: ""
+  private: false
+  # Topics: comma-and-space separated string, NOT a YAML list.
   topics: android, automotive, backup-camera, baby-monitor, cctv, camera, video, offline, hardware, software, open-source
+  default_branch: master
