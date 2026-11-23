@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
                     val sensorEvent by rememberSensorState(TYPE_ACCELEROMETER) // i would use TYPE_LINEAR_ACCELERATION but it's not available on all devices
                     val backingUp by remember {
                         derivedStateOf {
-                            (sensorEvent?.values?.get(2) ?: 0F) < -3F // TODO: MAGIC NUMBER ALERT (make configurable)
+                            (sensorEvent?.values?.get(2) ?: 0F) < -3F // TODO(#4): MAGIC NUMBER ALERT (make configurable)
                         }
                     }
 
